@@ -60,7 +60,7 @@ describe("Staking", function () {
         })
 
         it("should be reverted if adding stake package with rate is not positive", async function () {
-            await expect()
+
         })
 
         it("should be reverted if adding stake package with decimal negative", async function () {
@@ -181,6 +181,10 @@ describe("Staking", function () {
             expect(stakeInfo.amount).to.be.equal(ethers.utils.parseEther("20"))
         })
 
+        it("should not stake in stake of other people", async function () {
+
+        })
+
         afterEach(async () => {
             let balance = await gold.balanceOf(staker1.address);
             console.log("balance staker1: " + ethers.utils.formatEther(balance))
@@ -193,6 +197,36 @@ describe("Staking", function () {
 
             let balanceAdmin = await gold.balanceOf(admin.address);
             console.log("balance admin: " + ethers.utils.formatEther(balanceAdmin))
+        })
+    })
+
+    describe("unstake", function () {
+        it("should revert when unstake in locking time", async function () {
+            
+        })
+
+        it("should unstake successfully after locking time", async function () {
+            await staking.setReserve(reserve.address);
+            await staking.addStakePackage(12, 2, ethers.utils.parseEther("0.1"), 60 * 60 * 24 * 30);
+
+            await staking.connect(staker1).stake(1, ethers.utils.parseEther("10"));
+            const blockNumStart = await ethers.provider.getBlockNumber();
+            const blockStart = await ethers.provider.getBlock(blockNumStart);
+            const timestampStart = blockStart.timestamp;
+            console.log("Start at: " + timestampStart);
+
+            await network.provider.send("evm_increaseTime", [30 * 60 * 60 * 24])
+            await staking.connect(staker1).unstake(1);
+            const blockNumEnd = await ethers.provider.getBlockNumber();
+            const blockEnd = await ethers.provider.getBlock(blockNumEnd);
+            const timestampEnd = blockEnd.timestamp;
+            console.log("End at: " + timestampEnd);
+
+            let balance1 = await gold.balanceOf(staker1.address)
+            console.log("balance1: " + balance1);
+            let profit = (12 * 30 * 60 * 60 * 24 * 10)/(365 * 24 * 60 * 60 * 10**2)
+            console.log("profit: " + profit);
+            expect(ethers.utils.formatEther(balance1)).to.be.equal((100 + profit).toString())
         })
     })
 })
